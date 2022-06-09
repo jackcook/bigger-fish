@@ -1,0 +1,6 @@
+{
+  "icons": [
+    { "src": "/bigger-fish/192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/bigger-fish/512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}

@@ -1,0 +1,214 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui,
+    helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial,
+    sans-serif;
+  padding: 48px 64px 64px;
+}
+
+header,
+main {
+  width: 600px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 0.35em;
+}
+
+h2 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+h4 {
+  font-size: 1.25em;
+  font-style: italic;
+  margin-bottom: 1em;
+}
+
+a {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+p {
+  margin-bottom: 1em;
+  line-height: 1.35em;
+}
+
+ul {
+  margin-left: 2em;
+}
+
+li {
+  margin-top: 0.5em;
+  line-height: 1.35em;
+}
+
+img {
+  max-width: 100%;
+}
+
+#authors {
+  margin-bottom: 0.5em;
+}
+
+#demo {
+  background: #ecf0f1;
+  border-radius: 8px;
+  box-sizing: border-box;
+  margin: 2em 0;
+  padding: 24px 48px;
+  text-align: center;
+}
+
+#demo p {
+  width: 504px;
+  margin: 0 auto;
+}
+
+#options {
+  margin: 0.75em 0 1.25em;
+}
+
+.option {
+  margin: 0.75em 0;
+}
+
+#demo .option p {
+  display: block;
+  margin-bottom: 0.25em;
+}
+
+input[type="radio"] {
+  margin-left: 1em;
+  margin-right: 0.15em;
+  margin-top: -1px;
+  vertical-align: middle;
+}
+
+#custom:checked ~ input[type="text"] {
+  display: block;
+}
+
+input[type="text"] {
+  border: 1px solid #ccc;
+  display: none;
+  font-size: 1em;
+  margin: 0.5em auto 0;
+  width: 600px;
+  text-align: center;
+  padding: 0.25em;
+  box-sizing: border-box;
+}
+
+.buttons {
+  margin: 1.5em 0 0.5em;
+  text-align: center;
+}
+
+button,
+.buttons a {
+  background: rgba(0, 0, 0, 0);
+  border: 2px solid #1976d2;
+  border-radius: 4px;
+  color: #1976d2;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 16px;
+  margin: 0 8px;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+button.disabled {
+  background: #ccc;
+  border-color: #ccc;
+  color: #666;
+  cursor: default;
+}
+
+.trace:first-of-type {
+  margin-top: 1.75em;
+}
+
+.trace {
+  margin-top: 1em;
+}
+
+#demo .trace p {
+  text-align: left;
+  margin: 0 0 0.25em;
+}
+
+/* mobile */
+
+@media only screen and (max-width: 728px) {
+  body {
+    padding: 48px 0;
+  }
+
+  header,
+  main {
+    box-sizing: border-box;
+    padding: 0 32px;
+  }
+
+  header,
+  main,
+  #demo p {
+    width: 100%;
+  }
+
+  #demo {
+    border-radius: 0;
+    width: 100%;
+  }
+
+  #website-option {
+    display: none;
+  }
+}
+
+/* github corner */
+
+.github-corner:hover .octo-arm {
+  animation: octocat-wave 560ms ease-in-out;
+}
+
+@keyframes octocat-wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20%,
+  60% {
+    transform: rotate(-25deg);
+  }
+  40%,
+  80% {
+    transform: rotate(10deg);
+  }
+}
+
+@media (max-width: 500px) {
+  .github-corner:hover .octo-arm {
+    animation: none;
+  }
+  .github-corner .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+  }
+}

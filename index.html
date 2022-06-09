@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Meta -->
+    <meta charset="utf-8" />
+    <meta
+      name="description"
+      content="Demonstration of “There’s Always a Bigger Fish,” a powerful machine-learning-assisted side-channel attack. Published at ISCA ’22."
+    />
+    <meta
+      name="keywords"
+      content="bigger, fish, machine, learning, side, channel, attack, analysis, selenium, isca"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>There’s Always a Bigger Fish</title>
+
+    <!-- Social -->
+    <meta property="og:url" content="https://jackcook.github.io/bigger-fish" />
+    <meta property="og:title" content="There’s Always a Bigger Fish" />
+    <meta
+      property="og:description"
+      content="Demonstration of “There’s Always a Bigger Fish,” a powerful machine-learning-assisted side-channel attack. Published at ISCA ’22."
+    />
+    <meta
+      property="og:image"
+      content="https://jackcook.github.io/bigger-fish/figure1.png"
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:image"
+      content="https://jackcook.github.io/bigger-fish/figure1.png"
+    />
+    <meta name="twitter:creator" content="@jackcook36" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-N4TTCDDY2L"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-N4TTCDDY2L");
+    </script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>There’s Always a Bigger Fish:</h1>
+      <h4>
+        A Clarifying Analysis of a Machine-Learning-Assisted Side-Channel Attack
+      </h4>
+      <div id="authors">
+        <a href="https://jackcook.com">Jack Cook</a>,
+        <a href="http://drean.io">Jules Drean</a>,
+        <a href="https://www.fintelia.io">Jonathan Behrens</a>,
+        <a href="https://people.csail.mit.edu/mengjia/">Mengjia Yan</a>
+      </div>
+      <div>
+        Published at the
+        <a href="https://iscaconf.org/isca2022/"
+          >49th International Symposium on Computer Architecture</a
+        >
+        (ISCA)
+      </div>
+      <div class="buttons">
+        <a href="paper.pdf">Paper</a>
+        <a href="https://github.com/jackcook/bigger-fish">Code</a>
+      </div>
+    </header>
+    <section id="demo">
+      <h2>Interactive Demo</h2>
+      <p>
+        Use this tool to collect your own traces! For best results, close all
+        other programs and keep your mouse still while collecting traces.
+      </p>
+      <div id="options">
+        <div class="option">
+          <p><strong>Trace length</strong></p>
+          <input type="radio" name="duration" id="one" value="1000" />
+          <label for="one">1 second</label>
+          <input type="radio" name="duration" id="five" value="5000" checked />
+          <label for="five">5 seconds</label>
+          <input type="radio" name="duration" id="fifteen" value="15000" />
+          <label for="fifteen">15 seconds</label>
+        </div>
+        <div class="option" id="website-option">
+          <p><strong>Website</strong></p>
+          <input type="radio" name="site" id="none" value="none" checked />
+          <label for="nytimes">None</label>
+          <input
+            type="radio"
+            name="site"
+            id="nytimes"
+            value="https://nytimes.com"
+          />
+          <label for="nytimes">nytimes.com</label>
+          <input
+            type="radio"
+            name="site"
+            id="amazon"
+            value="https://amazon.com"
+          />
+          <label for="amazon">amazon.com</label>
+          <input
+            type="radio"
+            name="site"
+            id="weather"
+            value="https://weather.com"
+          />
+          <label for="weather">weather.com</label>
+          <input type="radio" name="site" id="custom" value="custom" />
+          <label for="custom">Custom</label>
+          <input
+            id="custom-site-input"
+            type="text"
+            placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          />
+        </div>
+      </div>
+      <div class="buttons">
+        <button id="collect-trace">Collect trace</button>
+        <button id="download-traces">Download traces</button>
+      </div>
+      <div id="traces"></div>
+    </section>
+    <main>
+      <h2>Key Takeaways</h2>
+      <ul>
+        <li>
+          Machine learning can be used to identify activity on your computer
+          from traces recorded in JavaScript that measure CPU instruction
+          throughput over time
+        </li>
+        <li>
+          We found this type of attack exploits signals from system interrupts,
+          which operating systems use to interact with hardware devices
+          <ul>
+            <li>
+              When a core processes interrupts, it pauses the execution of an
+              attacker, creating a signal that can be exploited
+            </li>
+          </ul>
+        </li>
+        <li>
+          Our <em>loop-counting attack</em> can correctly identify one of 100
+          websites being opened 96.6% of the time in Chrome on Linux
+        </li>
+        <li>
+          We identified a randomized timer mitigation that reduces our attack’s
+          accuracy to near chance
+        </li>
+      </ul>
+
+      <h2>Press</h2>
+      <ul>
+        <li>
+          <a
+            href="https://news.mit.edu/2022/side-channel-attacks-detection-0609"
+            target="_blank"
+            >MIT News</a
+          >
+        </li>
+      </ul>
+    </main>
+    <a
+      href="https://github.com/jackcook/bigger-fish"
+      class="github-corner"
+      aria-label="View source on GitHub"
+      ><svg
+        width="80"
+        height="80"
+        viewBox="0 0 250 250"
+        style="
+          fill: #151513;
+          color: #fff;
+          position: absolute;
+          top: 0;
+          border: 0;
+          right: 0;
+        "
+        aria-hidden="true"
+      >
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path
+          d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+          fill="currentColor"
+          style="transform-origin: 130px 106px"
+          class="octo-arm"
+        ></path>
+        <path
+          d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+          fill="currentColor"
+          class="octo-body"
+        ></path></svg
+    ></a>
+    <script src="d3.v6.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
