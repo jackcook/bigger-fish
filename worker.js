@@ -3,7 +3,7 @@ const P = 5; // time of one record, in milliseconds
 let start;
 let T;
 let recording = false;
-let updateInterval = 500;
+// let updateInterval = 500;
 let lastUpdateTime = 0;
 
 function sendUpdate(done) {
@@ -26,13 +26,13 @@ function sendUpdate(done) {
     }
   }
 
-  postMessage(
-    JSON.stringify({
-      done,
-      maxIndex: Math.floor(performance.now() - start),
-      trace,
-    })
-  );
+  // postMessage(
+  //   JSON.stringify({
+  //     done,
+  //     maxIndex: Math.floor(performance.now() - start),
+  //     trace,
+  //   })
+  // );
 }
 
 function record() {
