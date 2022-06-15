@@ -56,10 +56,10 @@ function record() {
 
     T[idx] = counter;
 
-    if (performance.now() - lastUpdateTime > updateInterval) {
-      // sendUpdate(false);
-      lastUpdateTime = performance.now();
-    }
+    // if (performance.now() - lastUpdateTime > updateInterval) {
+    //   sendUpdate(false);
+    //   lastUpdateTime = performance.now();
+    // }
   }
 }
 
