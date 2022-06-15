@@ -26,13 +26,13 @@ function sendUpdate(done) {
     }
   }
 
-  // postMessage(
-  //   JSON.stringify({
-  //     done,
-  //     maxIndex: Math.floor(performance.now() - start),
-  //     trace,
-  //   })
-  // );
+  postMessage(
+    JSON.stringify({
+      done,
+      maxIndex: Math.floor(performance.now() - start),
+      trace,
+    })
+  );
 }
 
 function record() {
@@ -57,7 +57,7 @@ function record() {
     T[idx] = counter;
 
     if (performance.now() - lastUpdateTime > updateInterval) {
-      sendUpdate(false);
+      // sendUpdate(false);
       lastUpdateTime = performance.now();
     }
   }
