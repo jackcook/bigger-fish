@@ -267,11 +267,11 @@ if opts.attacker_type == "javascript" or opts.attacker_type == "javascript_cache
 
     @app.route("/")
     def root():
-        return send_from_directory("js_attacker", "index.html")
+        return send_from_directory("attacker", "index.html")
 
     @app.route("/<path:path>")
     def static_dir(path):
-        return send_from_directory("js_attacker", path)
+        return send_from_directory("attacker", path)
 
     flask_thread = threading.Thread(target=app.run, kwargs={"port": 1234})
     flask_thread.setDaemon(True)
