@@ -143,7 +143,7 @@ def get_attacker_url():
 
         return opts.tor_onion_address
     else:
-        return "http://localhost:1234"
+        return "http://localhost:7777"
 
 def get_driver(browser):
     global remote_driver
@@ -186,10 +186,14 @@ def get_driver(browser):
             chrome_opts.add_experimental_option("excludeSwitches", ["enable-automation"])
         elif browser == Browser.CHROME_HEADLESS:
             chrome_opts.add_argument("--headless")
-
+        
+        try:
         # chromedriver needs this flag when running as root
-        if os.geteuid() == 0 or opts.disable_chrome_sandbox:
-            chrome_opts.add_argument("--no-sandbox")
+            if os.geteuid() == 0 or opts.disable_chrome_sandbox:
+                chrome_opts.add_argument("--no-sandbox")
+        except AttributeError:
+            if opts.disable_chrome_sandbox:
+                chrome_opts.add_argument("--no-sandbox")
 
         if opts.chrome_binary_path is not None:
             return driver_cls(options=chrome_opts, executable_path=os.path.join(opts.chrome_binary_path, "chromedriver"))
@@ -199,7 +203,10 @@ def get_driver(browser):
     return driver_cls()
 
 # Make sure existing processes aren't running
-procs = subprocess.check_output(["ps", "aux"]).decode("utf-8").split("\n")
+try:
+    procs = subprocess.check_output(["ps", "aux"]).decode("utf-8").split("\n")
+except FileNotFoundError:
+    procs = []
 
 for term in ["python", "chrome", "safaridriver"]:
     conflicts = []
@@ -258,25 +265,7 @@ def send_notification(message):
 
 if opts.attacker_type == "javascript" or opts.attacker_type == "javascript_cache" or opts.attacker_type == "sleep":
     # Start serving attacker app
-    app = Flask(__name__)
-
-    # Disable Flask logs
-    os.environ["WERKZEUG_RUN_MAIN"] = "true"
-    log = logging.getLogger("werkzeug")
-    log.disabled = True
-
-    @app.route("/")
-    def root():
-        return send_from_directory("attacker", "index.html")
-
-    @app.route("/<path:path>")
-    def static_dir(path):
-        return send_from_directory("attacker", path)
-
-    flask_thread = threading.Thread(target=app.run, kwargs={"port": 1234})
-    flask_thread.setDaemon(True)
-    flask_thread.start()
-
+    
     if opts.browser != Browser.SAFARI:
         attacker_browser = get_driver(opts.browser)
         attacker_browser.get(get_attacker_url())
@@ -447,8 +436,6 @@ def should_skip(domain):
 
 
 def run(domain, update_fn=None):
-    out_f_path = os.path.join(opts.out_directory, f"{domain.replace('https://', '').replace('http://', '').replace('www.', '')}.pkl")
-    out_f = open(out_f_path, "wb")
     i = 0
 
     # Add one so that we can have a first run where the site gets cached.
@@ -476,7 +463,10 @@ def run(domain, update_fn=None):
 
             # Save data to output file incrementally -- this allows us to save much
             # more data than fits in RAM.
-            pickle.dump(data, out_f)
+
+            out_f_path = os.path.join(opts.out_directory, f"{domain.replace('https://', '').replace('http://', '').replace('www.', '')}_{i}.pkl")
+            with open(out_f_path, "wb") as out_f:
+                pickle.dump(data, out_f)
 
             if update_fn is not None:
                 update_fn()
@@ -486,7 +476,6 @@ def run(domain, update_fn=None):
 
         i += 1
     
-    out_f.close()
     return True
 
 browser = None
