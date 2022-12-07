@@ -19,3 +19,5 @@ __pycache__
 
 # Twilio credentials
 twilio.json
+
+.idea/
