@@ -40,9 +40,8 @@ class TraceCollector:
 
 
 if __name__ == "__main__":
-    with TraceCollector(trace_length=5) as collector:
-        traces = collector.collect_traces()
-        print(traces)
-        time.sleep(3)
+    with TraceCollector(trace_length=10) as collector:
+        # youtube.com'u aç
+        # video oynatıcı aç
         traces = collector.collect_traces()
         print(traces)
