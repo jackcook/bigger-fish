@@ -21,7 +21,8 @@ twilio.json
 
 .idea/
 
-.3gp
-.mkv
-.mp4
-.flv
+# Media
+*.3gp
+*.mkv
+*.mp4
+*.flv

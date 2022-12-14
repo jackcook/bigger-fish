@@ -34,19 +34,15 @@ def get_data(path):
     for file in filepaths:
         f = open(file, "rb")
 
-        while True:
-            try:
-                data = pickle.load(f)
-                traces_i, labels_i = data[0], data[1]
+        all_data = pickle.load(f)
+        for data in all_data:
+            traces_i, labels_i = data[0], data[1]
+            if isinstance(traces_i[0], list):
+                traces.extend(traces_i)
+            else:
+                traces.append(traces_i)
 
-                if isinstance(traces_i[0], list):
-                    traces.extend(traces_i)
-                else:
-                    traces.append(traces_i)
-
-                labels.append(labels_i)
-            except EOFError:
-                break
+            labels.append(labels_i)
 
     traces = np.array(traces)
 
