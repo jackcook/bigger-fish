@@ -8,12 +8,29 @@ class TraceCollector:
         self.url = url
         self.trace_length = trace_length
 
+    def setChrome(self, headless=False, sandbox=True):
         options = webdriver.chrome.options.Options()
         if headless:
             options.add_argument("--headless")
         if not sandbox:
             options.add_argument("--no-sandbox")
         self.driver = webdriver.Chrome(options=options)
+
+    def setFirefox(self, headless=False, sandbox=True):
+        options = webdriver.FirefoxOptions()
+        if headless:
+            options.add_argument("--headless")
+        if not sandbox:
+            options.add_argument("--no-sandbox")
+        self.driver = webdriver.Firefox(options=options)
+
+    def setEdge(self, headless=False, sandbox=True):
+        options = webdriver.EdgeOptions()
+        if headless:
+            options.add_argument("--headless")
+        if not sandbox:
+            options.add_argument("--no-sandbox")
+        self.driver = webdriver.Edge(options=options)
 
     def collect_traces(self):
         self.__run()
@@ -28,6 +45,7 @@ class TraceCollector:
                 return traces[0]
 
     def __run(self):
+        self.driver.switch_to.window(self.driver.current_window_handle)
         self.driver.get(self.url)
         self.driver.execute_script(f"window.trace_length = {self.trace_length * 1000}")
         self.driver.execute_script("window.using_automation_script = true")
@@ -41,7 +59,5 @@ class TraceCollector:
 
 if __name__ == "__main__":
     with TraceCollector(trace_length=10) as collector:
-        # youtube.com'u aç
-        # video oynatıcı aç
         traces = collector.collect_traces()
         print(traces)

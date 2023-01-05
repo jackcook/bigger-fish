@@ -8,4 +8,7 @@ def root():
 
 @app.route("/<path:path>")
 def static_dir(path):
-    return send_from_directory("attacker", path)
+    resp = send_from_directory("attacker", path)
+    if "worker.js" in path:
+        resp.headers['Content-Type'] = 'text/javascript'
+    return resp
