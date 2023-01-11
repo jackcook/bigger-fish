@@ -19,7 +19,7 @@ def main():
     for i in range(len(data) // 100):
         partition = data[i * 100:i*100 + 100]
 
-        out_path = Path(args.o or ".").joinpath(f"{input_file_path.name_i}")
+        out_path = Path(args.o or ".").joinpath(f"{input_file_path.name}_{i}")
         with open(out_path, "wb") as out_file:
             pickle.dump(partition, out_file)
 
