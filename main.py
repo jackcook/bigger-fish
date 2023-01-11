@@ -34,6 +34,8 @@ def run(file_path, trace_length, player_type, browser="CHROME"):
             collector.setChrome()
         if browser == "EDGE":
             collector.setEdge()
+        if browser == "SAFARI":
+            collector.setSafari()
 
         player_thread = threading.Thread(target=lambda: player.play(file_path, trace_length))
         player_thread.start()
@@ -54,7 +56,7 @@ def ensure_output_file_does_not_exist(out_file):
 def main():
     if not os.path.exists(OUT_DIR):
         os.makedirs(OUT_DIR)
-    out_file = os.path.join(OUT_DIR, fr"traces_{NUM_OF_RUNS}_runs_{TRACE_LENGTH}_{sys.platform}_{int(time.time())}.pkl")
+    out_file = os.path.join(OUT_DIR, fr"traces_{NUM_OF_RUNS}_runs_{TRACE_LENGTH}_sec_{sys.platform}_OS_{VAR}_asVar.pkl")
     if not ensure_output_file_does_not_exist(out_file):
         return
 
@@ -78,17 +80,21 @@ def main():
                 run(file_path, TRACE_LENGTH, video_player)
 
     elif opts.var == "full":
-        for video_file_path in VIDEO_FILES:
-            for browser in ["FIREFOX", "CHROME", "EDGE"]:
-                for player in SupportedPlayers:
-                    out_file = os.path.join(OUT_DIR, fr"traces_{NUM_OF_RUNS}_runs_{TRACE_LENGTH}_{sys.platform}_{video_file_path}_{browser}_{player}_{int(time.time())}.pkl")
-                    traces = []
-                    for _ in trange(NUM_OF_RUNS):
-                        print(f"Run: {video_file_path, browser, player}")
-                        trace = run(video_file_path, TRACE_LENGTH, player, browser)
+        if platform.system()== "Darwin":
+            browsers = ["SAFARI","FIREFOX", "CHROME"]
+        else:
+            browsers = ["EDGE","FIREFOX", "CHROME"]
+        for _ in trange(NUM_OF_RUNS):
+            for file_path in VIDEO_FILES:   
+                for browser in browsers:
+                    for player in SupportedPlayers:
+                        print(f"Run: {file_path, browser, player}")
+                        trace = run(file_path, TRACE_LENGTH, player, browser)
                         traces.append(trace)
-                    with open(out_file, "wb") as f:
-                        pickle.dump(traces, f)
+                            
+
+    with open(out_file, "wb") as f:
+        pickle.dump(traces, f)
 
 
 if __name__ == "__main__":
