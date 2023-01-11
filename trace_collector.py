@@ -1,5 +1,6 @@
 import time
-
+from selenium.webdriver import Safari
+from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium import webdriver
 
 
@@ -31,6 +32,12 @@ class TraceCollector:
         if not sandbox:
             options.add_argument("--no-sandbox")
         self.driver = webdriver.Edge(options=options)
+
+    def setSafari(self, headless=False, sandbox=True):
+        self.driver = webdriver.Safari()
+        if headless:
+            # Not possible to run Safari in headless mode
+            print("Running Safari in non-headless mode because headless mode is not supported.")
 
     def collect_traces(self):
         self.__run()

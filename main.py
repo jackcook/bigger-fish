@@ -34,6 +34,8 @@ def run(file_path, trace_length, player_type, browser="CHROME"):
             collector.setChrome()
         if browser == "EDGE":
             collector.setEdge()
+        if browser == "SAFARI":
+            collector.setSafari()
 
         player_thread = threading.Thread(target=lambda: player.play(file_path, trace_length))
         player_thread.start()
@@ -78,8 +80,13 @@ def main():
                 run(file_path, TRACE_LENGTH, video_player)
 
     elif opts.var == "full":
+        if platform.system()== "Darwin":
+            browsers = ["SAFARI","FIREFOX", "CHROME"]
+        else:
+            browsers = ["EDGE","FIREFOX", "CHROME"]
+
         for video_file_path in VIDEO_FILES:
-            for browser in ["FIREFOX", "CHROME", "EDGE"]:
+            for browser in browsers:
                 for player in SupportedPlayers:
                     out_file = os.path.join(OUT_DIR, fr"traces_{NUM_OF_RUNS}_runs_{TRACE_LENGTH}_{sys.platform}_{video_file_path}_{browser}_{player}_{int(time.time())}.pkl")
                     traces = []
