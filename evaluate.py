@@ -1,4 +1,7 @@
 import argparse
+from typing import Tuple
+import csv
+import time
 import pandas
 import os
 import pickle
@@ -14,6 +17,7 @@ class Warehouse:
     def __init__(self):
         self.trace_len = -1 
         self.raw_data_points = []
+        self.data_points = None
 
     def insert(self, row):
         self._validate_trace(row[0])
@@ -73,7 +77,7 @@ class Evaluator:
 
         return X, y
 
-    def _generate_model(self, X, y, test_size=0.2):
+    def _predict(self, X, y, test_size=0.2):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y)
         
         clf = RandomForestClassifier()
@@ -84,7 +88,23 @@ class Evaluator:
 
         return top1
 
-    def evaluate(self, target, relaxations):
+    def _create_samples(self, X, y, folds):
+        samples = []
+        for fold in tqdm(range(folds)):                
+            accuracy = self._predict(X, y)
+            samples.append(accuracy * 100)
+        return samples
+
+    def _get_statistics(self, samples) -> Tuple[float, float]:
+        mean = -1
+        stdev = -1
+
+        if len(samples) > 0:
+            mean = np.mean(samples)
+            stdev = np.std(samples)
+        return (mean, stdev)
+
+    def _create_combinations(self, relaxations):
         data_frame = self.warehouse.get_df()
 
         browser_choices = "*" if "browser" in relaxations else data_frame["browser"].unique()
@@ -95,43 +115,50 @@ class Evaluator:
 
         combinations = np.meshgrid(browser_choices, player_choices, codec_choices, platform_choices, user_choices)
         combinations = np.array(combinations).T.reshape(-1, 5)
+
+        return combinations
+
+    def analyze(self, target, relaxations):
+        data_frame = self.warehouse.get_df()
+        combinations = self._create_combinations([target, *relaxations])
         
-        experiments = {}
-        scores = {}
-        for browser, player, codec, platform, user in tqdm(combinations):
-            data_point_amount = 0
-            for fold in tqdm(range(10)):
+        def run():
+            for browser, player, codec, platform, user in combinations:
+                sub_df = self._filter_data_points(data_frame.loc[:], browser, player, codec, platform, user)
+                data_point_amount = len(sub_df)
+                
+                yield (browser, player, codec, platform, user, data_point_amount)
+        
+        return run(), combinations
+
+    def evaluate(self, target, relaxations, folds = 10):
+        data_frame = self.warehouse.get_df()
+        combinations = self._create_combinations(relaxations=[target, *relaxations])
+        
+        def run():
+            for browser, player, codec, platform, user in combinations:
                 sub_df = data_frame.loc[:]
                 sub_df = self._filter_data_points(sub_df, browser, player, codec, platform, user)
-                
-                if (len(data_frame) == 0):
+                X, y = self._preprocess(sub_df.loc[:], target)
+
+                data_point_amount = len(X)
+                if data_point_amount == 0:
                     continue
                 
-                X, y = self._preprocess(sub_df.loc[:], target)
-                data_point_amount = len(X)
-                
-                if (browser, player, codec, platform, user) not in experiments:
-                    experiments[(browser, player, codec, platform, user)] = []
+                samples = []
+                try:
+                    samples = self._create_samples(X, y, folds)
+                except ValueError as ex:
+                    print("EXCEPTION HAPPENED WHEN", browser, player, codec, platform, user, data_point_amount)
+                    print(ex)
 
-                experiments[(browser, player, codec, platform, user)].append(self._generate_model(X, y))
-            samples = experiments[(browser, player, codec, platform, user)]
-            mean = np.mean(samples) * 100
-            stdev = np.std(samples) * 100
-            scores[(browser, player, codec, platform, user)] = (mean, stdev)
-            print(f"{browser}, {player}, {codec}, {platform}, {user} -> {data_point_amount} data points: {mean:.2f}% (+/- {stdev:.2f})")
+                mean, stdev = self._get_statistics(samples)
 
-        return scores
+                yield (browser, player, codec, platform, user, data_point_amount, mean, stdev, *samples)
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("dir")
-    parser.add_argument("--target", choices=["codec", "player", "browser", "platform", "user"])
-    parser.add_argument("--relax", choices=["codec", "player", "browser", "platform", "user"], nargs="*", default=[])
-    opts = parser.parse_args()
+        return run(), len(combinations)
 
-    warehouse = Warehouse()
-
-    print("Reading files...")
+def read_files(opts, warehouse):
     for root, _, files in os.walk(opts.dir):
         for file in tqdm(files):
             file_path = os.path.join(root, file)
@@ -140,13 +167,73 @@ def main():
                 for row in data:
                     warehouse.insert(row)
 
+def evaluate(evaluator, targets, relaxations, number_of_folds):
+    print("Starting the evaluation")
+    output_file_name = f"evaluations_{int(time.time())}.csv"
+
+    header = ("target", "browser", "player", "codec", "platform", "user", "data_points", "mean", "stdev", *[f"fold_{i+1}" for i in range(number_of_folds)])
+    write_line_to_csv(output_file_name, header)
+
+    for target in targets:
+        evaluations, total = evaluator.evaluate(target=target, relaxations=relaxations, folds=number_of_folds)
+        for evaluation in tqdm(evaluations, total=total):
+            browser, player, codec, platform, user, data_point_amount, mean, stdev = evaluation[:8]
+
+            line = (target, *evaluation)
+            if data_point_amount > 0:
+                print(f"Target={target}", browser, player, codec, platform, user, data_point_amount, mean, stdev)
+
+            write_line_to_csv(output_file_name, line)
+
+def analyze(evaluator: Evaluator, targets, relaxations):
+    print("Starting the analyzation")
+
+    for target in targets:
+        rows, _ = evaluator.analyze(target=target, relaxations=relaxations)
+        for row in rows:
+            browser, player, codec, platform, user, data_point_amount = row[:6]
+
+            if data_point_amount > 0:
+                print(f"Target={target}", row)
+
+def write_line_to_csv(file, line):
+    with open(file, "a", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(line)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dir")
+    parser.add_argument("--analyze",  action='store_true')
+    parser.add_argument("--targets", choices=["codec", "player", "browser", "platform", "user", "*"], nargs="+")
+    parser.add_argument("--relax", choices=["codec", "player", "browser", "platform", "user", "*"], nargs="*", default=[])
+    parser.add_argument("--folds", default=10)
+    opts = parser.parse_args()
+
+    number_of_folds = int(opts.folds)
+    targets = opts.targets
+    if targets == ["*"]:
+        targets = ["codec", "player", "browser", "platform", "user"]
+    
+    relaxations = opts.relax
+    if relaxations == ["*"]:
+        relaxations = ["codec", "player", "browser", "platform", "user"]
+
+    warehouse = Warehouse()
+
+    print("Reading files...")
+    read_files(opts, warehouse)
+
     print("Converting to pandas.DataFrame")
     warehouse.convert_to_df()
 
     evaluator = Evaluator(warehouse=warehouse)
 
-    print("Starting the evaluation")
-    scores = evaluator.evaluate(target=opts.target, relaxations=[opts.target, *opts.relax])
+    if opts.analyze:
+        analyze(evaluator, targets=targets, relaxations=relaxations)
+    else:
+        evaluate(evaluator, targets=targets, relaxations=relaxations, number_of_folds=number_of_folds)
+
     
 if __name__ == "__main__":
     main()
