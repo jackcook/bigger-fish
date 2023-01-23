@@ -6,35 +6,30 @@ import pickle
 import argparse
 import sys
 import os
-from tqdm import trange
+from tqdm import trange, tqdm
 import time
 import platform
 
 parser = argparse.ArgumentParser(description='Automate the collection of video player based CPU traces.')
-parser.add_argument("--trace_len", type=int, default=1, help="The trace length for the recordings in seconds.")
-parser.add_argument("--num_runs", type=int, default=5, help="The number of runs for each video file.")
+parser.add_argument("--len", type=int, default=15, help="The trace length for the recordings in seconds.")
+parser.add_argument("--samples", type=int, default=5, help="The number of runs for each video file.")
 parser.add_argument("--out_dir", type=str, default="", help="The output location.")
-parser.add_argument("--var", choices=["codec", "player", "full"], default="codec", help="The variable that will be changed. \
-        Choosing the codec will record traces for each codec and vice versa.")
+parser.add_argument("--codecs", choices=["3gp", "flv", "mp4", "mkv", "*"], nargs="+")
+parser.add_argument("--browsers", choices=["chrome", "safari", "edge", "firefox", "*"], nargs="+")
+parser.add_argument("--players", choices=["mpv", "mplayer", "vlc", "*"], nargs="+")
 opts = parser.parse_args()
-
-NUM_OF_RUNS = opts.num_runs
-TRACE_LENGTH = opts.trace_len
-OUT_DIR = opts.out_dir
-VAR = opts.var
-VIDEO_FILES = ["sample.mp4", "sample.flv", "sample.3gp", "sample.mkv"]
 
 def run(file_path, trace_length, player_type, browser="CHROME"):
     with TraceCollector(trace_length=trace_length) as collector:
         player = VideoPlayer(player=player_type)
 
-        if browser == "FIREFOX":
+        if browser.upper() == "FIREFOX":
             collector.setFirefox()
-        if browser == "CHROME":
+        if browser.upper() == "CHROME":
             collector.setChrome()
-        if browser == "EDGE":
+        if browser.upper() == "EDGE":
             collector.setEdge()
-        if browser == "SAFARI":
+        if browser.upper() == "SAFARI":
             collector.setSafari()
 
         player_thread = threading.Thread(target=lambda: player.play(file_path, trace_length))
@@ -53,50 +48,40 @@ def ensure_output_file_does_not_exist(out_file):
             return False
     return True
 
-def main():
-    if not os.path.exists(OUT_DIR):
-        os.makedirs(OUT_DIR)
-    out_file = os.path.join(OUT_DIR, fr"traces_{NUM_OF_RUNS}_runs_{TRACE_LENGTH}_{sys.platform}_{int(time.time())}.pkl")
-    if not ensure_output_file_does_not_exist(out_file):
-        return
+def combinations(players, codecs, browsers):
+    total = []
+    for codec in codecs:
+        for player in players:
+            for browser in browsers:
+                total.append((codec, player, browser))
+    return total
 
-    video_player = VideoPlayer()
+def main():
+    opts = parser.parse_args()
+    out_dir = opts.out_dir
+    num_of_samples = opts.samples
+    trace_len = opts.len
 
     traces = []
 
-    if opts.var == "player":
-        for player in video_player.players:
-            video_player = VideoPlayer(player=player)
-            file = "sample.mp4"
-            print(f"Recording traces for {file} with {player.name}...")
-            for _ in trange(NUM_OF_RUNS):
-                trace = run(file, TRACE_LENGTH, video_player)
-                traces.append(trace)
+    players = ["mpv", "mplayer", "vlc"] if "*" in opts.players else opts.players
+    codecs = ["3gp", "flv", "mp4", "mkv"] if "*" in opts.codecs else opts.codecs
+    browsers = ["chrome", "safari", "edge", "firefox"] if "*" in opts.browsers else opts.browsers
 
-    elif opts.var == "codec":
-        for file_path in VIDEO_FILES:
-            print(f"Playing {file_path}...")
-            for _ in trange(NUM_OF_RUNS):
-                run(file_path, TRACE_LENGTH, video_player)
+    for codec, player_name, browser in tqdm(combinations(players, codecs, browsers)):
+    
+        player = SupportedPlayers.map(player_name)
+        video_file = f"sample.{codec}"
+        print(f"\nRun: {video_file, browser, player.name}")
+        out_file = os.path.join(out_dir, fr"traces_{num_of_samples}_runs_{trace_len}_sec_{codec}_{player.name}_{browser}_{sys.platform}_{os.getlogin()}_{int(time.time())}.pkl")
+        traces = []
+    
+        for _ in trange(num_of_samples):
+            trace = run(video_file, trace_len, player, browser)
+            traces.append(trace)
 
-    elif opts.var == "full":
-        if platform.system()== "Darwin":
-            browsers = ["SAFARI","FIREFOX", "CHROME"]
-        else:
-            browsers = ["EDGE","FIREFOX", "CHROME"]
-
-        for video_file_path in VIDEO_FILES:
-            for browser in browsers:
-                for player in SupportedPlayers:
-                    out_file = os.path.join(OUT_DIR, fr"traces_{NUM_OF_RUNS}_runs_{TRACE_LENGTH}_{sys.platform}_{video_file_path}_{browser}_{player}_{int(time.time())}.pkl")
-                    traces = []
-                    for _ in trange(NUM_OF_RUNS):
-                        print(f"Run: {video_file_path, browser, player}")
-                        trace = run(video_file_path, TRACE_LENGTH, player, browser)
-                        traces.append(trace)
-                    with open(out_file, "wb") as f:
-                        pickle.dump(traces, f)
-
+        with open(out_file, "wb") as f:
+            pickle.dump(traces, f)
 
 if __name__ == "__main__":
     main()

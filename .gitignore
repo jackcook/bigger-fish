@@ -26,3 +26,5 @@ twilio.json
 *.mkv
 *.mp4
 *.flv
+
+*.log
