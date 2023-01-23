@@ -17,5 +17,5 @@ py -3.11 main.py --out_dir .\data --codecs mp4, mkv, flv, 3gp --browsers chrome,
 
 Evaluate findings:
 ```
-py -3.11 evaluate.py --targets codec, browser, player --relax user
+py -3.11 evaluate.py .\data --targets codec, browser, player --relax user
 ```
