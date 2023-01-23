@@ -24,7 +24,11 @@ class Warehouse:
 
         trace = row[0]
         codec, browser, player, platform, user, timestamp = row[1:]
-        new_data_point = [*trace, codec, browser, player.name, platform, user, timestamp]
+        if hasattr(player, "name"):
+            player_name = player.name
+        else:
+            player_name = player
+        new_data_point = [*trace, codec, browser, player_name, platform, user, timestamp]
         self.raw_data_points.append(new_data_point)
 
     def get_df(self):
@@ -158,14 +162,18 @@ class Evaluator:
 
         return run(), len(combinations)
 
-def read_files(opts, warehouse):
+def read_files(opts, warehouse: Warehouse):
+    file_paths = []
     for root, _, files in os.walk(opts.dir):
-        for file in tqdm(files):
+        for file in files:
             file_path = os.path.join(root, file)
-            with open(file_path, 'rb') as f:
-                data = pickle.load(f)
-                for row in data:
-                    warehouse.insert(row)
+            file_paths.append(file_path)
+
+    for file_path in tqdm(file_paths):
+        with open(file_path, 'rb') as f:
+            data = pickle.load(f)
+            for row in data:
+                warehouse.insert(row)
 
 def evaluate(evaluator, targets, relaxations, number_of_folds):
     print("Starting the evaluation")
@@ -224,7 +232,7 @@ def main():
     print("Reading files...")
     read_files(opts, warehouse)
 
-    print("Converting to pandas.DataFrame")
+    print("Converting to pandas.DataFrame...")
     warehouse.convert_to_df()
 
     evaluator = Evaluator(warehouse=warehouse)
