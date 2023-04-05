@@ -73,69 +73,64 @@
       window.recording = false;
       window.traces = [];
 
-      let traceIds = [];
-
       worker.onmessage = (e) => {
         window.recording = false;
 
         const trace = JSON.parse(e.data);
         window.traces.push(trace);
-
+        
         if (window.using_automation_script) {
           // Don't display anything when automation script is in use
           return;
         }
 
-        // Create new trace div
-        const parent = document.getElementById("traces");
-        const div = document.createElement("div");
-        const traceId = "a" + Math.random().toString().substring(2, 10);
-        div.setAttribute("id", traceId);
-        div.className = "trace";
-        parent.appendChild(div);
-        traceIds.push(traceId);
 
-        // Trace dimensions
-        const width = parent.getBoundingClientRect().width;
-        const height = 64;
+  // Trace dimensions
+  const parent = document.getElementById("traces");
+  const width = parent.getBoundingClientRect().width;
+  const height = 64;
 
-        // Create div for new trace
-        const svg = d3
-          .select("#" + traceId)
-          .append("svg")
-          .attr("width", width)
-          .attr("height", height);
 
-        // Find largest value across all traces
-        const maxVal = d3.max(window.traces, (d) => d3.max(d));
+    // Create new trace div
+    const div = document.createElement("div");
+    div.setAttribute("id", `t${traces.length}`);
+    div.className = "trace";
+    parent.appendChild(div);
+    
 
-        for (let i = 0; i < window.traces.length; i++) {
-          // Re-visualize all traces each time in case maxVal changes
-          const x = d3
-            .scaleLinear()
-            .domain([0, window.traces[i].length])
-            .range([0, width]);
+  const maxVal = d3.max(trace);
+  const x = d3.scaleLinear().domain([0, trace.length]).range([0, width]);
 
-          const color = d3
-            .scaleQuantize()
-            .range(["#0d0887", "#7e03a8", "#cc4778", "#f89540", "#f0f921"])
-            .domain([0, maxVal]);
+  const color = d3
+    .scaleQuantize()
+    .range(["#0d0887", "#7e03a8", "#cc4778", "#f89540", "#f0f921"])
+    .domain([0, maxVal]);
 
-          svg
-            .selectAll()
-            .data(window.traces[i].map((x, i) => ({ index: i, value: x })))
-            .join("rect")
-            .attr("x", (d) => x(d.index))
-            .attr("y", 0)
-            .attr("width", x(1))
-            .attr("height", height)
-            .style("fill", (d) => color(d.value));
-        }
+  // Remove the trace’s previously rendered content
+  d3.select(`#t${traces.length}`).select("svg").remove();
 
-        // Reset UI
-        collectTraceButton.innerText = "Collect trace";
-        collectTraceButton.className = "";
-      };
+  // Render the latest version of the trace
+  const svg = d3
+    .select(`#t${traces.length}`)
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .selectAll()
+    .data(trace.map((x, i) => ({ index: i, value: x })))
+    .join("rect")
+    .attr("x", (d) => x(d.index))
+    .attr("y", 0)
+    .attr("width", x(1))
+    .attr("height", height)
+    .style("fill", (d) => (d.index > 150000000 ? "gray" : color(d.value)));
+
+  
+    // Reset UI
+    collectTraceButton.innerText = "Collect trace";
+    collectTraceButton.className = "";
+
+};
+
 
       function collectTrace(attacker) {
         if (window.using_automation_script) {
