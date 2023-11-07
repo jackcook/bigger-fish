@@ -75,10 +75,13 @@ parser.add_argument(
     "--attacker_type",
     type=str,
     choices=["javascript", "javascript_cache", "counter", "ebpf"],
-    default="counter",
+    default="javascript",
 )
 parser.add_argument(
-    "--javascript_attacker_type", type=str, choices=["ours", "cache"], default="ours"
+    "--javascript_attacker_type",
+    type=str,
+    choices=["ours", "ours_with_timer_countermeasure", "cache"],
+    default="ours",
 )
 parser.add_argument(
     "--trace_length",
@@ -160,12 +163,6 @@ parser.add_argument(
     help="True if we want to enable the interrupts countermeasure Chrome extension.",
 )
 parser.add_argument(
-    "--enable_timer_countermeasure",
-    type=bool,
-    default=False,
-    help="True if we want to enable the randomized timer countermeasure.",
-)
-parser.add_argument(
     "--chrome_binary_path",
     type=str,
     default=None,
@@ -228,12 +225,6 @@ if opts.timer_resolution is not None and not os.path.exists(
 ):
     print("libtimer.so needs to be compiled. Run:")
     print("cc -fPIC -shared -o lib/libtimer.so lib/timer.c")
-    sys.exit(1)
-
-if opts.enable_timer_countermeasure and opts.attacker_type != "javascript":
-    print(
-        "If enable_timer_countermeasure is true, attacker_type must be set to javascript."
-    )
     sys.exit(1)
 
 
@@ -398,11 +389,7 @@ def send_notification(message):
         )
 
 
-if (
-    opts.attacker_type == "javascript"
-    or opts.attacker_type == "javascript_cache"
-    or opts.attacker_type == "sleep"
-):
+if opts.attacker_type == "javascript":
     # Start serving attacker app
     app = Flask(__name__)
 
@@ -464,19 +451,10 @@ def collect_data(q):
                 num += 1
 
             data[idx] = num
-    elif (
-        opts.attacker_type == "javascript"
-        or opts.attacker_type == "javascript_cache"
-        or opts.attacker_type == "sleep"
-    ):
+    elif opts.attacker_type == "javascript":
         try:
-            js_attacker_type = (
-                ("ours_cm" if opts.enable_timer_countermeasure else "ours")
-                if opts.attacker_type == "javascript"
-                else ("sleep" if opts.attacker_type == "sleep" else "cache")
-            )
             attacker_browser.execute_script(
-                f'window.collectTrace("{js_attacker_type}")'
+                f'window.collectTrace("{opts.javascript_attacker_type}")'
             )
         except InvalidSessionIdException:
             q.put([-1])
@@ -555,9 +533,7 @@ def record_trace(url):
     if len(results[0]) == 1 and results[0][0] == -1:
         return None
 
-    if opts.browser == Browser.SAFARI and (
-        opts.attacker_type == "javascript" or opts.attacker_type == "javascript_cache"
-    ):
+    if opts.browser == Browser.SAFARI and opts.attacker_type == "javascript":
         browser.close()
 
     return results
@@ -631,10 +607,7 @@ def run(domain, update_fn=None):
         if not recording:
             break
 
-        if opts.browser == Browser.SAFARI and (
-            opts.attacker_type == "javascript"
-            or opts.attacker_type == "javascript_cache"
-        ):
+        if opts.browser == Browser.SAFARI and opts.attacker_type == "javascript":
             pass
         else:
             try:
@@ -698,10 +671,7 @@ with tqdm(total=total_traces) as pbar:
 
         if (
             opts.browser == Browser.SAFARI
-            and (
-                opts.attacker_type == "javascript"
-                or opts.attacker_type == "javascript_cache"
-            )
+            and opts.attacker_type == "javascript"
             and browser is not None
         ):
             # Don't create a new browser in this case -- we will open a new
@@ -724,11 +694,7 @@ with tqdm(total=total_traces) as pbar:
 
         browser.quit()
 
-if (
-    opts.attacker_type == "javascript"
-    or opts.attacker_type == "javascript_cache"
-    or opts.attacker_type == "sleep"
-):
+if opts.attacker_type == "javascript":
     attacker_browser.quit()
 
 if opts.sites_list == "open_world":

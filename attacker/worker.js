@@ -1,6 +1,6 @@
 const OUR_ATTACKER = "ours";
 const CACHE_ATTACKER = "cache";
-const OUR_ATTACKER_COUNTERMEASURE = "ours_cm";
+const OUR_ATTACKER_COUNTERMEASURE = "ours_with_timer_countermeasure";
 
 const P = 5; // time of one record, in milliseconds
 const L3_SIZE = 6 * 1024 * 1024;
