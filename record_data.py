@@ -394,7 +394,6 @@ if opts.attacker_type == "javascript":
     app = Flask(__name__)
 
     # Disable Flask logs
-    os.environ["WERKZEUG_RUN_MAIN"] = "true"
     log = logging.getLogger("werkzeug")
     log.disabled = True
 
