@@ -563,17 +563,17 @@ if opts.sites_list.startswith("alexa"):
     domains = domains[:n]
 elif opts.sites_list == "open_world":
     domains = pd.read_csv(os.path.join("sites", "open_world.csv"))["domain"].tolist()
-    domains = [f"https://{x}" for x in domains]
+    domains = [f"https://{x}" if "http://" not in x else x for x in domains]
 else:
     domains = opts.sites_list.split(",")
-    domains = [f"https://{x}" for x in domains]
+    domains = [f"https://{x}" if "http://" not in x else x for x in domains]
     using_custom_site = True
 
 
 def should_skip(domain):
     out_f_path = os.path.join(
         opts.out_directory,
-        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '')}.pkl",
+        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '').replace(':', '_')}.pkl",
     )
 
     if os.path.exists(out_f_path):
@@ -596,7 +596,7 @@ def should_skip(domain):
 def run(domain, update_fn=None):
     out_f_path = os.path.join(
         opts.out_directory,
-        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '')}.pkl",
+        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '').replace(':', '_')}.pkl",
     )
     out_f = open(out_f_path, "wb")
     i = 0
