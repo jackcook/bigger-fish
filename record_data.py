@@ -573,7 +573,7 @@ else:
 def should_skip(domain):
     out_f_path = os.path.join(
         opts.out_directory,
-        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '').replace(':', '_')}.pkl",
+        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '').replace(':', '_').replace('/', '_')}.pkl",
     )
 
     if os.path.exists(out_f_path):
@@ -596,7 +596,7 @@ def should_skip(domain):
 def run(domain, update_fn=None):
     out_f_path = os.path.join(
         opts.out_directory,
-        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '').replace(':', '_')}.pkl",
+        f"{domain.replace('https://', '').replace('http://', '').replace('www.', '').replace(':', '_').replace('/', '_')}.pkl",
     )
     out_f = open(out_f_path, "wb")
     i = 0
