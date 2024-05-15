@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 You only need to install the drivers for the browsers you would like to use.
 
-- Chrome: Download [here](https://chromedriver.chromium.org/downloads) and add `chromedriver` to your path
+- Chrome: Download [here](https://googlechromelabs.github.io/chrome-for-testing/) and add `chromedriver` to your path
 - Firefox: Download [here](https://github.com/mozilla/geckodriver/releases) and add `geckodriver` to your path
 - Safari: Skip this step! `safaridriver` is built into macOS
 - [Tor Browser](https://www.torproject.org): Install [tor-browser-selenium](https://github.com/webfp/tor-browser-selenium)
